@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>IG Not Follow Back Checker</title>
+
+  <link href="https://fonts.cdnfonts.com/css/coolvetica" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="guidePopup" class="popup-overlay">
+  <div class="popup-card">
+    <h2>Bagaimana Cara Menggunakannya???</h2>
+
+    <ol>
+      <li>Adala pokoknya..</li>
+      <li>Tanya ChatGPT :Cara Ekspor Informasi Pengikut dan Mengikuti format .json</li>
+      <li>Upload kedua file (following.json dan followers_1.json) tersebut ke aplikasi</li>
+      <li>Klik <b>Cek Tidak Follow Balik</b></li>
+    </ol>
+
+    <p class="note">
+      Semua proses berjalan di browser kamu.<br>
+      Tidak ada login dan data tidak disimpan.
+    </p>
+
+    <button id="closeGuide">Mengerti</button>
+  </div>
+</div>
+
+
+<h1>Instagram Checker</h1>
+<p class="subtitle">Siapa yang tidak follow balik kamu</p>
+
+<div class="card">
+  <label>Following (following.json)</label>
+  <input type="file" id="followingFile" accept=".json">
+
+  <label>Followers (followers_1.json)</label>
+  <input type="file" id="followersFile" accept=".json">
+
+  <button type="button" id="checkBtn">
+  Cek Tidak Follow Balik
+</button>
+</div>
+
+<div id="resultSection" class="hidden">
+  <h2>Tidak Follow Balik</h2>
+  <ul id="result"></ul>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
