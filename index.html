@@ -699,4 +699,133 @@
       checkBtn.disabled = false;
       checkBtn.textContent = '🔍 Cek Sekarang';
     }
-  
+  });
+
+  // ─── TABS ───
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderTab(btn.dataset.tab);
+    });
+  });
+
+  function renderTab(tab) {
+    currentTab = tab;
+    document.getElementById('searchInput').value = '';
+    const titles = {
+      notfollowback: '❌ Tidak Follow Balik',
+      mutual: '✅ Mutual Follow',
+      fans: '👀 Fans (Follow Kamu, Kamu Tidak Follow)'
+    };
+    document.getElementById('resultTitle').textContent = titles[tab];
+    renderList(data[tab]);
+  }
+
+  function renderList(list) {
+    const ul = document.getElementById('resultList');
+    const empty = document.getElementById('emptyState');
+    const noFilter = document.getElementById('noFilterResult');
+    ul.innerHTML = '';
+    empty.classList.add('hidden');
+    noFilter.classList.add('hidden');
+
+    if (list.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    list.forEach((u, i) => {
+      const li = document.createElement('li');
+      li.className = 'result-item';
+      li.style.animationDelay = Math.min(i * 0.03, 0.5) + 's';
+      li.innerHTML = `
+        <span class="num">${i + 1}</span>
+        <span class="uname">@${u}</span>
+        <a class="open-btn" href="https://instagram.com/${u}" target="_blank" rel="noopener">Buka IG</a>
+      `;
+      ul.appendChild(li);
+    });
+  }
+
+  // ─── SEARCH ───
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    const list = data[currentTab];
+    const filtered = q ? list.filter(u => u.toLowerCase().includes(q)) : list;
+    const ul = document.getElementById('resultList');
+    const noFilter = document.getElementById('noFilterResult');
+    const empty = document.getElementById('emptyState');
+
+    ul.innerHTML = '';
+    empty.classList.add('hidden');
+    noFilter.classList.add('hidden');
+
+    if (filtered.length === 0 && q) {
+      noFilter.classList.remove('hidden');
+      return;
+    }
+    if (filtered.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    filtered.forEach((u, i) => {
+      const li = document.createElement('li');
+      li.className = 'result-item';
+      li.innerHTML = `
+        <span class="num">${i + 1}</span>
+        <span class="uname">@${u}</span>
+        <a class="open-btn" href="https://instagram.com/${u}" target="_blank" rel="noopener">Buka IG</a>
+      `;
+      ul.appendChild(li);
+    });
+  });
+
+  // ─── COPY ───
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const list = data[currentTab];
+    if (!list.length) return;
+    const text = list.map(u => '@' + u).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Tersalin!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 Copy Semua'; btn.classList.remove('copied'); }, 2000);
+    });
+  });
+
+  // ─── EXPORT TXT ───
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const list = data[currentTab];
+    if (!list.length) return;
+    const text = list.map(u => '@' + u).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = currentTab + '_list.txt';
+    a.click();
+  });
+
+  // ─── RESET ───
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    followingInput.value = '';
+    followersInput.value = '';
+    status1.textContent = 'Belum upload'; status1.className = 'upload-status wait';
+    status2.textContent = 'Belum upload'; status2.className = 'upload-status wait';
+    zone1.classList.remove('done'); zone2.classList.remove('done');
+    checkBtn.disabled = true;
+    document.getElementById('resultSection').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ─── POPUP ───
+  document.getElementById('closeGuide').addEventListener('click', () => {
+    document.getElementById('guidePopup').style.display = 'none';
+  });
+  document.getElementById('guideBtn').addEventListener('click', () => {
+    document.getElementById('guidePopup').style.display = 'flex';
+  });
+</script>
+</body>
+</html>
