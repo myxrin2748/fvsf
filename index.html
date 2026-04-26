@@ -2,53 +2,701 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Who Not Follow Back Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IG Checker v2 — Who's Not Following Back</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #ef4444;
+      --red-dark: #b91c1c;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --yellow: #f59e0b;
+      --bg: #020617;
+      --bg2: #0f172a;
+      --bg3: #1e293b;
+      --border: #1e293b;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
 
-  <link href="https://fonts.cdnfonts.com/css/coolvetica" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* BG GRID */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(239,68,68,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(239,68,68,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* GLOW */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(239,68,68,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 16px 80px;
+    }
+
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 6vw, 44px);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* CARD */
+    .card {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+    }
+
+    /* UPLOAD ZONE */
+    .upload-zone {
+      border: 1.5px dashed #334155;
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.active {
+      border-color: var(--red);
+      background: rgba(239,68,68,0.05);
+    }
+    .upload-zone.done {
+      border-color: var(--green);
+      background: rgba(34,197,94,0.05);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .upload-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .upload-icon.red { background: rgba(239,68,68,0.15); }
+    .upload-icon.blue { background: rgba(59,130,246,0.15); }
+    .upload-info strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .upload-info span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .upload-status {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .upload-status.ok { color: var(--green); }
+    .upload-status.wait { color: var(--muted); }
+
+    /* BTN */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: white;
+      box-shadow: 0 8px 24px rgba(239,68,68,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(239,68,68,0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px;
+    }
+    .btn-outline:hover { border-color: #475569; color: var(--text); }
+    .btn-green {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+    }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-num.red { color: var(--red); }
+    .stat-num.green { color: var(--green); }
+    .stat-num.blue { color: var(--blue); }
+    .stat-num.yellow { color: var(--yellow); }
+    .stat-label { font-size: 12px; color: var(--muted); }
+
+    /* RESULT SECTION */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .result-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .icon-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .icon-btn:hover { color: var(--text); border-color: #475569; }
+    .icon-btn.copied { color: var(--green); border-color: var(--green); }
+
+    /* SEARCH */
+    .search-bar {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus { border-color: var(--red); }
+    .search-bar::placeholder { color: var(--muted); }
+
+    /* LIST */
+    .result-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .result-list::-webkit-scrollbar { width: 4px; }
+    .result-list::-webkit-scrollbar-track { background: transparent; }
+    .result-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+    .result-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      animation: fadeUp 0.3s ease both;
+      transition: border-color 0.15s;
+    }
+    .result-item:hover { border-color: #334155; }
+    .result-item .num {
+      font-size: 11px;
+      color: var(--muted);
+      width: 24px;
+      flex-shrink: 0;
+    }
+    .result-item .uname {
+      font-size: 14px;
+      font-weight: 500;
+      flex: 1;
+      padding: 0 10px;
+      word-break: break-all;
+    }
+    .result-item .open-btn {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: var(--red);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .result-item .open-btn:hover {
+      background: rgba(239,68,68,0.22);
+      color: #fca5a5;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--muted);
+    }
+    .empty-state .em { font-size: 32px; margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .tab.active {
+      background: var(--bg3);
+      color: var(--text);
+    }
+
+    /* POPUP */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.9);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .popup-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.7);
+      animation: scaleIn 0.25s ease;
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .popup-card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.4);
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-text { font-size: 14px; line-height: 1.5; color: #cbd5e1; }
+    .step-text b { color: var(--text); }
+    .popup-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .popup-note span { color: var(--green); }
+
+    .hidden { display: none !important; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    .no-result-filter {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-  <div id="guidePopup" class="popup-overlay">
+
+<!-- GUIDE POPUP -->
+<div id="guidePopup" class="popup-overlay">
   <div class="popup-card">
-    <h2>Bagaimana Cara Menggunakannya???</h2>
+    <h2>📖 Cara Pakai</h2>
 
-    <ol>
-      <li>Adala pokoknya..</li>
-      <li>Tanya ChatGPT :Cara Ekspor Informasi Pengikut dan Mengikuti format .json</li>
-      <li>Upload kedua file (following.json dan followers_1.json) tersebut ke aplikasi</li>
-      <li>Klik <b>Cek Tidak Follow Balik</b></li>
-    </ol>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Buka <b>Instagram</b> → Settings → <b>Your activity</b> → Download your information → Request download dalam format <b>JSON</b></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Tunggu email dari Instagram, lalu download dan extract file ZIP-nya</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Cari file <b>following.json</b> dan <b>followers_1.json</b> di dalam folder connections/followers_and_following/</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Upload kedua file ke aplikasi ini, lalu klik <b>Cek Sekarang</b></div>
+    </div>
 
-    <p class="note">
-      Semua proses berjalan di browser kamu.<br>
-      Tidak ada login dan data tidak disimpan.
-    </p>
+    <div class="popup-note">
+      <span>🔒 100% Private</span> — semua proses di browser kamu.<br>Tidak ada data yang dikirim ke server manapun.
+    </div>
 
-    <button id="closeGuide">Mengerti</button>
+    <button class="btn btn-green" id="closeGuide" style="margin-top:20px;">Siap, Mulai!</button>
   </div>
 </div>
 
+<!-- MAIN -->
+<div class="wrap">
+  <div class="header">
+    <div class="badge">Instagram Tool v2</div>
+    <h1>Who's Not<br>Following Back?</h1>
+    <p class="subtitle">Cek siapa yang kamu follow tapi tidak follow balik</p>
+  </div>
 
-<h1>Instagram Checker</h1>
-<p class="subtitle">Siapa yang tidak follow balik kamu</p>
+  <!-- UPLOAD CARD -->
+  <div class="card">
+    <div class="upload-zone" id="zone1">
+      <input type="file" id="followingFile" accept=".json">
+      <div class="upload-label">
+        <div class="upload-icon red">📤</div>
+        <div class="upload-info">
+          <strong>following.json</strong>
+          <span>Daftar akun yang kamu follow</span>
+        </div>
+        <div class="upload-status wait" id="status1">Belum upload</div>
+      </div>
+    </div>
 
-<div class="card">
-  <label>Following (following.json)</label>
-  <input type="file" id="followingFile" accept=".json">
+    <div class="upload-zone" id="zone2">
+      <input type="file" id="followersFile" accept=".json">
+      <div class="upload-label">
+        <div class="upload-icon blue">📥</div>
+        <div class="upload-info">
+          <strong>followers_1.json</strong>
+          <span>Daftar akun yang follow kamu</span>
+        </div>
+        <div class="upload-status wait" id="status2">Belum upload</div>
+      </div>
+    </div>
 
-  <label>Followers (followers_1.json)</label>
-  <input type="file" id="followersFile" accept=".json">
+    <div class="divider"></div>
 
-  <button type="button" id="checkBtn">
-  Cek Tidak Follow Balik
-</button>
+    <button class="btn btn-primary" id="checkBtn" disabled>🔍 Cek Sekarang</button>
+    <button class="btn btn-outline" id="guideBtn" style="margin-top:8px;">📖 Cara dapatkan file JSON</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultSection" class="hidden">
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-num blue" id="statFollowing">0</div>
+        <div class="stat-label">Kamu Follow</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num yellow" id="statFollowers">0</div>
+        <div class="stat-label">Follow Kamu</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num red" id="statGhost">0</div>
+        <div class="stat-label">Tidak Follow Balik</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num green" id="statMutual">0</div>
+        <div class="stat-label">Mutual Follow</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="notfollowback">❌ Tidak Follow Balik</button>
+        <button class="tab" data-tab="mutual">✅ Mutual</button>
+        <button class="tab" data-tab="fans">👀 Fans</button>
+      </div>
+
+      <div class="result-header">
+        <div class="result-title" id="resultTitle">Tidak Follow Balik</div>
+        <div class="result-actions">
+          <button class="icon-btn" id="copyBtn">📋 Copy Semua</button>
+          <button class="icon-btn" id="exportBtn">💾 Export TXT</button>
+        </div>
+      </div>
+
+      <input class="search-bar" id="searchInput" type="text" placeholder="🔍 Cari username...">
+
+      <ul class="result-list" id="resultList"></ul>
+      <div id="emptyState" class="empty-state hidden">
+        <div class="em">🎉</div>
+        <p>Semua akun yang kamu follow, follow balik kamu!</p>
+      </div>
+      <div id="noFilterResult" class="no-result-filter hidden">Tidak ada hasil yang cocok</div>
+    </div>
+
+    <button class="btn btn-outline" id="resetBtn" style="margin-top:10px;">↩ Reset & Upload Ulang</button>
+  </div>
 </div>
 
-<div id="resultSection" class="hidden">
-  <h2>Tidak Follow Balik</h2>
-  <ul id="result"></ul>
-</div>
+<script>
+  // ─── STATE ───
+  let data = { notFollowBack: [], mutual: [], fans: [] };
+  let currentTab = 'notfollowback';
+  let allFollowing = [], allFollowers = [];
 
-<script src="script.js" defer></script>
-</body>
-</html>
+  // ─── HELPERS ───
+  function readJSON(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { resolve(JSON.parse(reader.result)); }
+        catch { reject('JSON invalid'); }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function extractAllUsernames(obj, result = new Set()) {
+    if (Array.isArray(obj)) {
+      obj.forEach(item => extractAllUsernames(item, result));
+    } else if (typeof obj === 'object' && obj !== null) {
+      if (Array.isArray(obj.string_list_data) && obj.string_list_data[0]?.value) {
+        result.add(obj.string_list_data[0].value);
+      }
+      for (const key in obj) extractAllUsernames(obj[key], result);
+    }
+    return result;
+  }
+
+  function extractFollowing(section) {
+    if (!Array.isArray(section)) return [];
+    return section.map(item => item.title).filter(Boolean);
+  }
+
+  // ─── FILE INPUT HANDLERS ───
+  const followingInput = document.getElementById('followingFile');
+  const followersInput = document.getElementById('followersFile');
+  const zone1 = document.getElementById('zone1');
+  const zone2 = document.getElementById('zone2');
+  const status1 = document.getElementById('status1');
+  const status2 = document.getElementById('status2');
+  const checkBtn = document.getElementById('checkBtn');
+
+  function updateCheckBtn() {
+    const f1 = followingInput.files[0];
+    const f2 = followersInput.files[0];
+    checkBtn.disabled = !(f1 && f2);
+  }
+
+  followingInput.addEventListener('change', () => {
+    if (followingInput.files[0]) {
+      status1.textContent = '✓ ' + followingInput.files[0].name.slice(0, 20);
+      status1.className = 'upload-status ok';
+      zone1.classList.add('done');
+    }
+    updateCheckBtn();
+  });
+
+  followersInput.addEventListener('change', () => {
+    if (followersInput.files[0]) {
+      status2.textContent = '✓ ' + followersInput.files[0].name.slice(0, 20);
+      status2.className = 'upload-status ok';
+      zone2.classList.add('done');
+    }
+    updateCheckBtn();
+  });
+
+  // ─── CHECK LOGIC ───
+  checkBtn.addEventListener('click', async () => {
+    try {
+      checkBtn.disabled = true;
+      checkBtn.textContent = '⏳ Memproses...';
+
+      const followingJSON = await readJSON(followingInput.files[0]);
+      const followersJSON = await readJSON(followersInput.files[0]);
+
+      allFollowing = extractFollowing(followingJSON.relationships_following);
+      if (allFollowing.length === 0) { alert('File following.json tidak valid atau formatnya berbeda.'); return; }
+
+      allFollowers = Array.from(extractAllUsernames(followersJSON));
+
+      const followersSet = new Set(allFollowers);
+      const followingSet = new Set(allFollowing);
+
+      data.notFollowBack = allFollowing.filter(u => !followersSet.has(u));
+      data.mutual        = allFollowing.filter(u => followersSet.has(u));
+      data.fans          = allFollowers.filter(u => !followingSet.has(u));
+
+      // Stats
+      document.getElementById('statFollowing').textContent = allFollowing.length;
+      document.getElementById('statFollowers').textContent = allFollowers.length;
+      document.getElementById('statGhost').textContent    = data.notFollowBack.length;
+      document.getElementById('statMutual').textContent   = data.mutual.length;
+
+      document.getElementById('resultSection').classList.remove('hidden');
+      renderTab('notfollowback');
+
+      document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (e) {
+      console.error(e);
+      alert('Gagal membaca file. Pastikan file JSON valid.');
+    } finally {
+      checkBtn.disabled = false;
+      checkBtn.textContent = '🔍 Cek Sekarang';
+    }
+  
